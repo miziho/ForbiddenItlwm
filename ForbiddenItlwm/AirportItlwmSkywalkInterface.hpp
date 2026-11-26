@@ -59,6 +59,43 @@ struct apple80211_fw_hot_channels {
 static_assert(sizeof(apple80211_fw_hot_channels) == 0x14,
               "apple80211_fw_hot_channels size");
 
+// The four structures that travel with the ioctls below have never been
+// published, the SDK only forward declares them. Their lengths were read
+// out of the framework: the WCLFsmManager::cmdIouc() calls that carry them
+// pass the length of the structure as the fourth argument.
+//
+// All four are set by the framework, which fills them in before the driver
+// sees them. The driver does not read any field: the proxy mode, the
+// roam hint, the background scan configuration and the wireless network
+// management are none of them something an itlwm adapter can do. Accepting
+// the request only keeps the framework from reporting a failure on every
+// join, and the fields the framework put in stay untouched.
+
+// Reassociation: 188 bytes.
+struct apple80211_reassoc {
+    uint8_t reserved[188];
+};
+static_assert(sizeof(apple80211_reassoc) == 188, "apple80211_reassoc size");
+
+// Proxy mode: 20 bytes. The framework builds it with the sentinel 0xaaaa
+// at offset 0x06 and 0x11; leaving the structure untouched keeps them.
+struct apple80211_wcl_arp_mode {
+    uint8_t reserved[20];
+};
+static_assert(sizeof(apple80211_wcl_arp_mode) == 20, "apple80211_wcl_arp_mode size");
+
+// Background scan configuration: 5 bytes.
+struct apple80211_bg_scan {
+    uint8_t reserved[5];
+};
+static_assert(sizeof(apple80211_bg_scan) == 5, "apple80211_bg_scan size");
+
+// Wireless network management: 872 bytes.
+struct apple80211_wcl_wnm_config_t {
+    uint8_t reserved[872];
+};
+static_assert(sizeof(apple80211_wcl_wnm_config_t) == 872, "apple80211_wcl_wnm_config_t size");
+
 class AirportItlwmSkywalkInterface : public IO80211InfraProtocol {
     OSDeclareDefaultStructors(AirportItlwmSkywalkInterface)
     
@@ -82,7 +119,7 @@ public:
     IOReturn setDYNAMIC_RSSI_WINDOW_CONFIG(apple80211_dynamic_rssi_window_config*) override { return kIOReturnUnsupported; }
     IOReturn setBSS_BLACKLIST(bss_blacklist*) override { return kIOReturnUnsupported; }
     IOReturn setWCL_LEGACY_ROAM_PROFILE_CONFIG(apple80211_legacy_roam_profile_config*) override { return kIOReturnUnsupported; }
-    IOReturn setWCL_ARP_MODE(apple80211_wcl_arp_mode*) override { return kIOReturnUnsupported; }
+    IOReturn setWCL_ARP_MODE(apple80211_wcl_arp_mode*) override;
     IOReturn setWCL_QOS_PARAMS(apple80211_wcl_qos_params*) override { return kIOReturnUnsupported; }
     IOReturn setVOICE_IND_STATE(apple80211_voice_ind_state*) override { return kIOReturnUnsupported; }
     IOReturn setMWS_ACCESSORY_POWER_LIMIT_WIFI_ENH(apple80211_mws_accessory_power_limit*) override { return kIOReturnUnsupported; }
@@ -92,7 +129,7 @@ public:
     IOReturn setBYPASS_TX_POWER_CAP(apple80211_bypass_tx_power_cap*) override { return kIOReturnUnsupported; }
     IOReturn setFACETIME_WIFICALLING_PARAMS(apple80211_facetime_wificalling_params*) override { return kIOReturnUnsupported; }
     IOReturn setIPV4_PARAMS(apple80211_ipv4_params*) override { return kIOReturnUnsupported; }
-    IOReturn setWCL_WNM_OPS(apple80211_wcl_wnm_config_t*) override { return kIOReturnUnsupported; }
+    IOReturn setWCL_WNM_OPS(apple80211_wcl_wnm_config_t*) override;
     IOReturn setWCL_WNM_OFFLOAD(apple80211_wcl_wnm_offload_t*) override { return kIOReturnUnsupported; }
     IOReturn setWCL_LIMITED_AGGREGATION(apple80211_limited_aggregation_config*) override { return kIOReturnUnsupported; }
     IOReturn setWCL_BCN_MUTE_CONFIG(apple80211_bcn_mute_config*) override { return kIOReturnUnsupported; }
@@ -399,7 +436,7 @@ public:
 #else
     virtual IOReturn setWCL_LEAVE_NETWORK(apple80211_leave_network *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
 #endif
-    virtual IOReturn setWCL_REASSOC(apple80211_reassoc *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
+    IOReturn setWCL_REASSOC(apple80211_reassoc *) AIRPORT_SKYWALK_OVERRIDE;
     virtual IOReturn setWCL_SET_ROAM_LOCK(apple80211_set_roam_lock *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     virtual IOReturn setWCL_ROAM_PROFILE_CONFIG(apple80211_roam_profile_config *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     virtual IOReturn setWCL_ROAM_PROFILE_CONFIGV1(apple80211_roam_profile_configV1 *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
@@ -450,7 +487,7 @@ public:
     virtual IOReturn setMIMO_CONFIG(apple80211_mimo_config *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     virtual IOReturn setWCL_CONFIG_BG_MOTIONPROFILE(apple80211_bg_motion_profile *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     virtual IOReturn setWCL_CONFIG_BG_NETWORK(apple80211_bg_network *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
-    virtual IOReturn setWCL_CONFIG_BGSCAN(apple80211_bg_scan *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
+    IOReturn setWCL_CONFIG_BGSCAN(apple80211_bg_scan *) AIRPORT_SKYWALK_OVERRIDE;
     virtual IOReturn setWCL_CONFIG_BG_PARAMS(apple80211_bg_params *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     virtual IOReturn setBLOCKED_BANDS(apple80211_blocked_bands *) AIRPORT_SKYWALK_OVERRIDE { return kIOReturnUnsupported; }
     

@@ -1273,6 +1273,46 @@ void AirportItlwmSkywalkInterface::handleWCLEvent(int code, void *data)
     }
 }
 
+// The framework fills these structures in and hands them to the driver. None
+// of them is something an itlwm adapter can carry out, so the driver takes
+// them as they are and reports success. The framework otherwise records a
+// failure for every one of them on every join.
+//
+// The fields the framework put in stay untouched: the proxy mode carries a
+// sentinel of 0xaaaa at offset 0x06 and 0x11, and the framework checks it.
+
+IOReturn AirportItlwmSkywalkInterface::setWCL_REASSOC(apple80211_reassoc *data)
+{
+    if (!data)
+        return kIOReturnBadArgument;
+    itlWCLTrace('R', 0, 0, 0);
+    return kIOReturnSuccess;
+}
+
+IOReturn AirportItlwmSkywalkInterface::setWCL_ARP_MODE(apple80211_wcl_arp_mode *data)
+{
+    if (!data)
+        return kIOReturnBadArgument;
+    itlWCLTrace('A', 0, 0, 0);
+    return kIOReturnSuccess;
+}
+
+IOReturn AirportItlwmSkywalkInterface::setWCL_CONFIG_BGSCAN(apple80211_bg_scan *data)
+{
+    if (!data)
+        return kIOReturnBadArgument;
+    itlWCLTrace('B', 0, 0, 0);
+    return kIOReturnSuccess;
+}
+
+IOReturn AirportItlwmSkywalkInterface::setWCL_WNM_OPS(apple80211_wcl_wnm_config_t *data)
+{
+    if (!data)
+        return kIOReturnBadArgument;
+    itlWCLTrace('W', 0, 0, 0);
+    return kIOReturnSuccess;
+}
+
 IOReturn AirportItlwmSkywalkInterface::setPM_MODE(apple80211_pm_mode *data)
 {
     if (!data)
